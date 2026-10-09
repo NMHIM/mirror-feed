@@ -1,5 +1,5 @@
 {
- "_how_to_add": "Add a company: copy one line, change name/ats/token. ats is one of greenhouse, lever, ashby, personio, smartrecruiters, recruitee, workable. token is the company's name in its job-board address (boards.greenhouse.io/TOKEN, jobs.lever.co/TOKEN, jobs.ashbyhq.com/TOKEN, TOKEN.jobs.personio.de, jobs.smartrecruiters.com/TOKEN, TOKEN.recruitee.com, apply.workable.com/TOKEN). Set \"off\": true to pause a source.",
+ "_how_to_add": "Add a company: copy one line, change name/ats/token. ats is one of greenhouse, lever, ashby, personio, smartrecruiters, recruitee, workable. token is the company's name in its job-board address (boards.greenhouse.io/TOKEN, jobs.lever.co/TOKEN, jobs.ashbyhq.com/TOKEN, TOKEN.jobs.personio.de, jobs.smartrecruiters.com/TOKEN, TOKEN.recruitee.com, apply.workable.com/TOKEN). Set \"off\": true to pause a source. Events: type ics (a calendar file), html (a list page; set link_pattern) or auto (any page: Mirror finds calendar files, embedded event data or a news feed by itself). uni is the university code (FU, HU, TU, UDK, CHA, HTW, BHT, HWR, ASH, HFM, KHB, EHB, KHSB …) or all. \"review\": true keeps a source's events in Review feed; \"auto\": true posts even events read from a plain web page.",
  "companies": [
   {
    "name": "N26",
@@ -508,7 +508,8 @@
    "uni": "BHT",
    "type": "html",
    "url": "https://www.bht-berlin.de/events",
-   "link_pattern": "/item/cal/event/detail/"
+   "link_pattern": "/item/cal/event/detail/",
+   "auto": true
   },
   {
    "id": "hwr-events",
@@ -516,7 +517,8 @@
    "uni": "HWR",
    "type": "html",
    "url": "https://www.hwr-berlin.de/veranstaltungen",
-   "link_pattern": "/aktuelles/veranstaltung/detail/"
+   "link_pattern": "/aktuelles/veranstaltung/detail/",
+   "auto": true
   },
   {
    "id": "stw-events",
@@ -524,7 +526,8 @@
    "uni": "all",
    "type": "html",
    "url": "https://www.stw.berlin/veranstaltungskalender/",
-   "link_pattern": "/veranstaltungskalender/.+\\.html"
+   "link_pattern": "/veranstaltungskalender/.+\\.html",
+   "auto": true
   },
   {
    "id": "stw-culture",
@@ -532,7 +535,253 @@
    "uni": "all",
    "type": "html",
    "url": "https://www.stw.berlin/kultur/eventkalender/",
-   "link_pattern": "/kalender/.+\\.html"
+   "link_pattern": "/kalender/.+\\.html",
+   "auto": true
+  },
+  {
+   "id": "hu-events",
+   "name": "Humboldt-Universität",
+   "uni": "HU",
+   "type": "auto",
+   "url": "https://www.hu-berlin.de/de/pr/veranstaltungen"
+  },
+  {
+   "id": "hu-events-en",
+   "name": "Humboldt-Universität",
+   "uni": "HU",
+   "type": "auto",
+   "url": "https://www.hu-berlin.de/en/events"
+  },
+  {
+   "id": "hu-campus-events",
+   "name": "HU Campus Events",
+   "uni": "HU",
+   "type": "auto",
+   "url": "https://hu-berlin.campus-events.com/"
+  },
+  {
+   "id": "hu-international",
+   "name": "HU International",
+   "uni": "HU",
+   "type": "auto",
+   "url": "https://www.hu-berlin.de/en/university/international/events"
+  },
+  {
+   "id": "hu-sport",
+   "name": "HU Hochschulsport",
+   "uni": "HU",
+   "type": "auto",
+   "url": "https://www.hochschulsport.hu-berlin.de/de/veranstaltungen/termine"
+  },
+  {
+   "id": "humboldt-innovation",
+   "name": "Humboldt-Innovation",
+   "uni": "HU",
+   "type": "auto",
+   "url": "https://humboldt-innovation.de/en/events"
+  },
+  {
+   "id": "tu-events",
+   "name": "TU Berlin",
+   "uni": "TU",
+   "type": "auto",
+   "url": "https://www.tu.berlin/events"
+  },
+  {
+   "id": "tu-career",
+   "name": "TU Career Service",
+   "uni": "TU",
+   "type": "auto",
+   "url": "https://www.tu.berlin/careerservice/ueber-uns/aktuelles/veranstaltungen-1"
+  },
+  {
+   "id": "tu-sport",
+   "name": "TU-Sport",
+   "uni": "TU",
+   "type": "auto",
+   "url": "https://www.tu-sport.de/wettkampf-events/events/"
+  },
+  {
+   "id": "udk-calendar",
+   "name": "UdK Berlin",
+   "uni": "UDK",
+   "type": "auto",
+   "url": "https://www.udk-berlin.de/kalender"
+  },
+  {
+   "id": "udk-international",
+   "name": "UdK International Office",
+   "uni": "UDK",
+   "type": "auto",
+   "url": "https://www.udk-berlin.de/en/service/international-office/upcoming-events/"
+  },
+  {
+   "id": "htw-studium",
+   "name": "HTW Berlin",
+   "uni": "HTW",
+   "type": "auto",
+   "url": "https://www.htw-berlin.de/studium/aktuelles"
+  },
+  {
+   "id": "htw-aktuelles",
+   "name": "HTW Berlin",
+   "uni": "HTW",
+   "type": "auto",
+   "url": "https://www.htw-berlin.de/hochschule/aktuelles"
+  },
+  {
+   "id": "htw-career",
+   "name": "HTW Career",
+   "uni": "HTW",
+   "type": "auto",
+   "url": "https://events.htw-berlin.de/karriere"
+  },
+  {
+   "id": "charite-rss",
+   "name": "Charité",
+   "uni": "CHA",
+   "type": "auto",
+   "url": "https://www.charite.de/service/veranstaltung?type=102"
+  },
+  {
+   "id": "charite-en",
+   "name": "Charité",
+   "uni": "CHA",
+   "type": "auto",
+   "url": "https://www.charite.de/en/charite/events"
+  },
+  {
+   "id": "ash-events",
+   "name": "Alice Salomon Hochschule",
+   "uni": "ASH",
+   "type": "auto",
+   "url": "https://www.ash-berlin.eu/hochschule/presse-und-newsroom/veranstaltungen/"
+  },
+  {
+   "id": "ash-international",
+   "name": "ASH International",
+   "uni": "ASH",
+   "type": "auto",
+   "url": "https://www.ash-berlin.eu/en/ash-international/international-activities-for-students/cultural-events-and-international-regulars-table/"
+  },
+  {
+   "id": "hfm-calendar",
+   "name": "Hochschule für Musik Hanns Eisler",
+   "uni": "HFM",
+   "type": "auto",
+   "url": "https://www.hfm-berlin.de/veranstaltungen/veranstaltungskalender/"
+  },
+  {
+   "id": "khb-calendar",
+   "name": "weißensee kunsthochschule",
+   "uni": "KHB",
+   "type": "auto",
+   "url": "https://kh-berlin.de/kalender"
+  },
+  {
+   "id": "ehb-termine",
+   "name": "Evangelische Hochschule Berlin",
+   "uni": "EHB",
+   "type": "auto",
+   "url": "https://www.eh-berlin.de/termine"
+  },
+  {
+   "id": "khsb-termine",
+   "name": "Katholische Hochschule für Sozialwesen",
+   "uni": "KHSB",
+   "type": "auto",
+   "url": "https://www.khsb-berlin.de/index.html"
+  },
+  {
+   "id": "bht-career",
+   "name": "BHT Career Service",
+   "uni": "BHT",
+   "type": "auto",
+   "url": "https://www.bht-berlin.de/415"
+  },
+  {
+   "id": "hwr-career",
+   "name": "HWR Career Service",
+   "uni": "HWR",
+   "type": "auto",
+   "url": "https://www.hwr-berlin.de/aktuelles/veranstaltungen/?mksearch%5Bterm%5D=%23careerservice"
+  },
+  {
+   "id": "fu-peer-mentoring",
+   "name": "FU International Peer Mentoring",
+   "uni": "FU",
+   "type": "ics",
+   "url": "https://www.fu-berlin.de/en/sites/studienberatung/international/peer_mentoring/events/index.ics?format=ics"
+  },
+  {
+   "id": "cs-bb",
+   "name": "Career Services Berlin-Brandenburg",
+   "uni": "all",
+   "type": "auto",
+   "url": "https://www.cs-bb.de/events.ics"
+  },
+  {
+   "id": "cs-bb-page",
+   "name": "Career Services Berlin-Brandenburg",
+   "uni": "all",
+   "type": "auto",
+   "url": "https://www.cs-bb.de/termine/"
+  },
+  {
+   "id": "bua-termine",
+   "name": "Berlin University Alliance",
+   "uni": "all",
+   "type": "ics",
+   "url": "https://www.berlin-university-alliance.de/en/news/termine/index.ics?format=ics"
+  },
+  {
+   "id": "bua-events",
+   "name": "Berlin University Alliance",
+   "uni": "all",
+   "type": "auto",
+   "url": "https://www.berlin-university-alliance.de/en/events/2026/index.html"
+  },
+  {
+   "id": "science-week",
+   "name": "Berlin Science Week",
+   "uni": "all",
+   "type": "auto",
+   "url": "https://berlinscienceweek.com/"
+  },
+  {
+   "id": "stw-internationals",
+   "name": "Studierendenwerk · Internationals",
+   "uni": "all",
+   "type": "auto",
+   "url": "https://www.stw.berlin/en/internationals/events-for-international-students.html"
+  },
+  {
+   "id": "meetup-international",
+   "name": "International & Social Events Berlin (Meetup)",
+   "uni": "all",
+   "type": "ics",
+   "url": "https://www.meetup.com/international-events-berlin/events/ical/",
+   "review": true
+  },
+  {
+   "id": "meetup-language",
+   "name": "Networking & Language Exchange (Meetup)",
+   "uni": "all",
+   "type": "ics",
+   "url": "https://www.meetup.com/networking_language_exchange/events/ical/",
+   "review": true
+  },
+  {
+   "id": "luma-handpicked",
+   "name": "Handpicked Events Berlin (Luma)",
+   "uni": "all",
+   "type": "ics",
+   "url": "https://api.lu.ma/ics/get?entity=calendar&id=cal-pG0sEBj2UEuIAbT",
+   "review": true
   }
- ]
+ ],
+ "auto_publish": {
+  "jobs": true,
+  "events": true
+ }
 }

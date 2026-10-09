@@ -291,25 +291,6 @@ def parse_ics(text):
     return out
 
 
-def ics_source(src):
-    now = datetime.now(timezone.utc)
-    out = []
-    for ev in parse_ics(get(src["url"], accept="text/calendar")):
-        if "DTSTART" not in ev:
-            continue
-        start = ics_dt(*ev["DTSTART"])
-        if not start or start < now - timedelta(hours=2) or start > now + timedelta(days=EVENT_DAYS_AHEAD):
-            continue
-        title = ics_unescape(ev.get("SUMMARY", ("", {}))[0])
-        title = re.sub(r"^(Vortrag|Workshop|Veranstaltung|Event|Lecture|Talk)\s*\|\s*", "", title).strip()
-        link = ics_unescape(ev.get("URL", ("", {}))[0]).strip() or src.get("page") or \
-            re.sub(r"index\.ics(\?format=ics)?$", "index.html", src["url"])
-        uid = ev.get("UID", (link + start.isoformat(), {}))[0]
-        out.append(event(src, uid, title, start, ics_unescape(ev.get("LOCATION", ("", {}))[0]), link,
-                         ics_unescape(ev.get("DESCRIPTION", ("", {}))[0])))
-    return out
-
-
 class _Links(HTMLParser):
     """Flattens a page into text, remembering where each link starts and ends."""
     def __init__(self):
@@ -337,57 +318,245 @@ class _Links(HTMLParser):
             self.text.append(data)
 
 
+def in_window(start):
+    now = datetime.now(timezone.utc)
+    return start and now - timedelta(hours=2) <= start <= now + timedelta(days=EVENT_DAYS_AHEAD)
+
+
+def ics_items(src, text, page=None):
+    """Events from iCal text. Trusted: the organiser published the date themselves."""
+    out = []
+    for ev in parse_ics(text):
+        if "DTSTART" not in ev:
+            continue
+        start = ics_dt(*ev["DTSTART"])
+        if not in_window(start):
+            continue
+        title = ics_unescape(ev.get("SUMMARY", ("", {}))[0])
+        title = re.sub(r"^(Vortrag|Workshop|Veranstaltung|Event|Lecture|Talk)\s*\|\s*", "", title).strip()
+        link = ics_unescape(ev.get("URL", ("", {}))[0]).strip() or page or src.get("page") or \
+            re.sub(r"index\.ics(\?format=ics)?$", "index.html", src["url"])
+        uid = ev.get("UID", (link + start.isoformat(), {}))[0]
+        it = event(src, uid, title, start, ics_unescape(ev.get("LOCATION", ("", {}))[0]), link,
+                   ics_unescape(ev.get("DESCRIPTION", ("", {}))[0]))
+        it["_trusted"] = True
+        out.append(it)
+    return out
+
+
+def ics_source(src):
+    return ics_items(src, get(src["url"], accept="text/calendar"))
+
+
+def parse_when(v):
+    """An ISO date/time from JSON-LD ('2026-10-12', '2026-10-12T18:00', '…+02:00', '…Z')."""
+    if not isinstance(v, str) or not v.strip():
+        return None
+    v = v.strip().replace("Z", "+00:00")
+    try:
+        if re.fullmatch(r"\d{4}-\d{2}-\d{2}", v):
+            return datetime.fromisoformat(v).replace(hour=9, tzinfo=BERLIN)
+        dt = datetime.fromisoformat(v)
+        return dt if dt.tzinfo else dt.replace(tzinfo=BERLIN)
+    except ValueError:
+        return None
+
+
+def jsonld_items(src, page, base):
+    """schema.org Events embedded in the page (many university sites have them). Trusted."""
+    found = []
+
+    def walk(x):
+        if isinstance(x, list):
+            for y in x:
+                walk(y)
+        elif isinstance(x, dict):
+            t = x.get("@type")
+            types = t if isinstance(t, list) else [t]
+            if any(isinstance(tt, str) and tt.endswith("Event") for tt in types):
+                found.append(x)
+            for k in ("@graph", "itemListElement", "item", "subEvent", "event", "events"):
+                if k in x:
+                    walk(x[k])
+    for blk in re.findall(r'<script[^>]+application/ld\+json[^>]*>(.*?)</script>', page, re.S | re.I):
+        try:
+            walk(json.loads(html.unescape(blk.strip())))
+        except Exception:
+            continue
+    out = []
+    for e in found:
+        start = parse_when(e.get("startDate"))
+        if not in_window(start):
+            continue
+        loc = e.get("location")
+        if isinstance(loc, list):
+            loc = loc[0] if loc else ""
+        if isinstance(loc, dict):
+            addr = loc.get("address")
+            loc = loc.get("name") or (addr.get("streetAddress") if isinstance(addr, dict) else addr) or ""
+        link = e.get("url") or base
+        if isinstance(link, list):
+            link = link[0]
+        link = urllib.parse.urljoin(base, str(link))
+        it = event(src, e.get("@id") or (link + start.isoformat()), e.get("name") or "", start, loc or "", link,
+                   e.get("description") or "")
+        it["_trusted"] = True
+        out.append(it)
+    return out
+
+
+def rss_items(src, text):
+    """News feeds rarely carry the event date; only items with a clear date in their text count."""
+    out = []
+    try:
+        root = ET.fromstring(text.encode("utf-8") if isinstance(text, str) else text)
+    except ET.ParseError:
+        return out
+    ns = {"a": "http://www.w3.org/2005/Atom"}
+    entries = root.findall(".//item") or root.findall(".//a:entry", ns)
+    now = datetime.now(BERLIN)
+    for it in entries:
+        title = (it.findtext("title") or it.findtext("a:title", namespaces=ns) or "").strip()
+        link = (it.findtext("link") or "").strip()
+        if not link:
+            le = it.find("a:link", ns)
+            link = le.get("href") if le is not None else ""
+        desc = clean(it.findtext("description") or it.findtext("a:summary", namespaces=ns) or "")
+        m = DATE_RE.search(title) or DATE_RE.search(desc)
+        start = date_from_match(m, now) if m else None
+        if not start or not in_window(start) or not link:
+            continue
+        out.append(event(src, link, DATE_RE.sub(" ", title).strip(" -–|·,"), start, "", link, desc))
+    return out
+
+
+def date_from_match(m, now):
+    d, mo = int(m.group(1)), int(m.group(2))
+    y = m.group(3)
+    y = int(y.strip()) if y else now.year
+    if y < 100:
+        y += 2000
+    hh, mm = (int(m.group(4)), int(m.group(5))) if m.group(4) else (9, 0)
+    try:
+        start = datetime(y, mo, d, min(hh, 23), min(mm, 59), tzinfo=BERLIN)
+    except ValueError:
+        return None
+    if not m.group(3) and start < now - timedelta(days=60):   # "10.01." seen in December means next year
+        start = start.replace(year=y + 1)
+    return start
+
+
+_robots = {}
+def robots_ok(url):
+    """Respect robots.txt: if a site asks bots not to read a page, we don't."""
+    import urllib.robotparser
+    p = urllib.parse.urlparse(url)
+    root = f"{p.scheme}://{p.netloc}"
+    if root not in _robots:
+        rp = urllib.robotparser.RobotFileParser()
+        try:
+            rp.parse(get(root + "/robots.txt", accept="text/plain", tries=1).splitlines())
+        except Exception:
+            rp = None                                  # no robots.txt: allowed
+        _robots[root] = rp
+    rp = _robots[root]
+    return rp is None or rp.can_fetch(UA, url)
+
+
+GENERIC_LINK = r"(veranstalt|event|termin|kalend|calend|detail|programm)"
 DATE_RE = re.compile(r"(\d{1,2})\.\s?(\d{1,2})\.(\s?\d{4}|\s?\d{2}(?!\d))?(?:[^\d]{0,25}?(\d{1,2})[:.](\d{2})\s*(?:Uhr|h)?)?")
 
 
-def html_source(src):
+def html_items(src, page, base, pattern):
     """Careful, simple reading of an event list page: every link whose address matches
-    link_pattern is an event; its date is taken from the link text or the text right
-    around it. Anything without a clear future date is skipped (and you still
-    approve each one)."""
-    page = get(src["url"], accept="text/html")
+    the pattern is an event; its date is taken from the link text or the text right
+    around it. Anything without a clear future date is skipped. Not trusted: these
+    wait for your approval unless the source says "auto": true."""
     p = _Links()
     p.feed(page)
     text = "".join(p.text)
-    pat = re.compile(src["link_pattern"])
+    pat = re.compile(pattern, re.I)
+    host = urllib.parse.urlparse(base).netloc
     now = datetime.now(BERLIN)
     seen, out = set(), []
     for href, a, b in p.links:
         if not pat.search(href):
             continue
-        link = urllib.parse.urljoin(src["url"], href)
-        if link in seen:
+        link = urllib.parse.urljoin(base, href)
+        if link in seen or urllib.parse.urlparse(link).netloc != host or link.rstrip("/") == base.rstrip("/"):
             continue
         title = re.sub(r"\s+", " ", text[a:b]).strip()
-        # the date: in the link text, else right after it, else the nearest one before it
         m = DATE_RE.search(text[a:b]) or DATE_RE.search(text[b:b + 220])
         if not m:
             before = list(DATE_RE.finditer(text[max(0, a - 220):a]))
             m = before[-1] if before else None
-        if not m:
-            continue
-        d, mo = int(m.group(1)), int(m.group(2))
-        y = m.group(3)
-        y = int(y.strip()) if y else now.year
-        if y < 100:
-            y += 2000
-        hh, mm = (int(m.group(4)), int(m.group(5))) if m.group(4) else (9, 0)
-        try:
-            start = datetime(y, mo, d, min(hh, 23), min(mm, 59), tzinfo=BERLIN)
-        except ValueError:
-            continue
-        if not m.group(3) and start < now - timedelta(days=60):   # "10.01." seen in December means next year
-            start = start.replace(year=y + 1)
-        if start < now - timedelta(hours=2) or start > now + timedelta(days=EVENT_DAYS_AHEAD):
+        start = date_from_match(m, now) if m else None
+        if not start or not in_window(start):
             continue
         title = DATE_RE.sub(" ", title)
         title = re.sub(r"\b(Mo|Di|Mi|Do|Fr|Sa|So|Mon|Tue|Wed|Thu|Fri|Sat|Sun)\b\.?,?", " ", title)
         title = re.sub(r"\s+", " ", title).strip(" -–|·,")
-        if len(title) < 6 or title.lower() in ("mehr", "more", "details", "weiterlesen", "read more"):
+        if len(title) < 6 or title.lower() in ("mehr", "more", "details", "weiterlesen", "read more", "mehr erfahren"):
             continue
         seen.add(link)
         out.append(event(src, link, title, start, "", link))
     return out
+
+
+def html_source(src):
+    if not robots_ok(src["url"]):
+        raise RuntimeError("the site's robots.txt asks bots not to read this page, so we don't")
+    return html_items(src, get(src["url"], accept="text/html"), src["url"], src.get("link_pattern") or GENERIC_LINK)
+
+
+def auto_source(src):
+    """Reads whatever the page offers, best first: a calendar file, embedded event data,
+    calendar links on the page (up to 20), a news feed, and finally the page itself."""
+    url = src["url"]
+    if not robots_ok(url):
+        raise RuntimeError("the site's robots.txt asks bots not to read this page, so we don't")
+    body = get(url, accept="text/html,application/xhtml+xml,text/calendar,application/rss+xml;q=0.9,*/*;q=0.8")
+    head = body.lstrip()[:3000]
+    if "BEGIN:VCALENDAR" in head:
+        return ics_items(src, body)
+    if re.search(r"<(rss|feed)[\s>]", head):
+        return rss_items(src, body)
+    items = jsonld_items(src, body, url)
+    if items:
+        return items
+    host = urllib.parse.urlparse(url).netloc
+    ics, rss = [], []
+    for tag in re.findall(r"<(?:a|link)\b[^>]*>", body, re.I):
+        href = re.search(r'href\s*=\s*["\']([^"\']+)["\']', tag, re.I)
+        if not href:
+            continue
+        h = urllib.parse.urljoin(url, html.unescape(href.group(1)))
+        if urllib.parse.urlparse(h).netloc != host:
+            continue
+        low = tag.lower()
+        if re.search(r"\.ics(\b|/|\?|$)|[?&](ical|ics)=|format=ics|ics_view|downloadics|\.ical", h, re.I) or "text/calendar" in low:
+            if h not in ics:
+                ics.append(h)
+        elif "application/rss+xml" in low or "application/atom+xml" in low:
+            if h not in rss:
+                rss.append(h)
+    out = []
+    for h in ics[:20]:
+        try:
+            out += ics_items(src, get(h, accept="text/calendar", tries=1), page=url if len(ics) > 3 else None)
+        except Exception:
+            pass
+        time.sleep(0.3)
+    if out:
+        return out
+    for h in rss[:2]:
+        try:
+            out += rss_items(src, get(h, accept="application/rss+xml", tries=1))
+        except Exception:
+            pass
+    if out:
+        return out
+    return html_items(src, body, url, src.get("link_pattern") or GENERIC_LINK)
 
 
 # ---------------------------------------------------------------------------
@@ -413,6 +582,23 @@ class DB:
         except urllib.error.HTTPError as e:
             raise RuntimeError(f"{method} {path} -> {e.code}: {e.read().decode()[:300]}")
 
+    def check(self):
+        """One test request first, so a setup problem gives a clear message."""
+        try:
+            self.req("GET", "/feed_items?select=id&limit=1")
+        except RuntimeError as e:
+            msg = str(e)
+            if "-> 401" in msg or "-> 403" in msg or "Invalid API key" in msg or "JWT" in msg:
+                sys.exit("STOP: Supabase refused the key. SUPABASE_SERVICE_KEY must be the SECRET key "
+                         "(Supabase → Project Settings → API Keys → Secret keys, starts with sb_secret_ ; "
+                         "or the legacy service_role key), not the publishable/anon key.\n" + msg)
+            if "-> 404" in msg or "PGRST205" in msg or "42P01" in msg or "feed_items" in msg:
+                sys.exit("STOP: the table feed_items doesn't exist yet. Run mirror_feed.sql once in "
+                         "Supabase → SQL Editor, then run this again.\n" + msg)
+            sys.exit("STOP: Supabase answered with an error.\n" + msg)
+        except Exception as e:
+            sys.exit(f"STOP: couldn't reach Supabase at {self.base}. Check SUPABASE_URL. ({type(e).__name__}: {e})")
+
     def existing(self, source):
         q = urllib.parse.quote(source, safe="")
         return {r["ext_id"]: r for r in self.req("GET", f"/feed_items?select=id,ext_id,status,published_id,kind&source=eq.{q}&limit=5000") or []}
@@ -430,6 +616,30 @@ class DB:
         if post_ids:
             self.req("DELETE", f"/posts?author_id=eq.mirror&id=in.({','.join(map(str, post_ids))})", prefer="return=minimal")
 
+    def approved_event_links(self):
+        return {r["link"] for r in self.req("GET", "/feed_items?select=link&kind=eq.event&status=eq.approved&limit=10000") or []}
+
+    def publish(self, fid, it):
+        """Put one item live (as "Mirror") and mark it approved."""
+        if it["kind"] == "job":
+            row = {"author_id": "mirror", "author_name": "Mirror", "body": (it.get("details") or "")[:2000],
+                   "room": "room:jobs", "kind": "job", "title": it["title"][:120],
+                   "company": (it.get("company") or "Company")[:120], "link": it["link"]}
+            table = "posts"
+        else:
+            aud = it.get("audience") or "all"
+            row = {"author_id": "mirror", "author_name": "Mirror", "title": it["title"][:90], "starts_at": it["starts_at"],
+                   "place": (it.get("place") or "")[:90] or None,
+                   "details": " · ".join(x for x in [it.get("company"), it.get("details")] if x)[:400] or None,
+                   "audience": aud if re.fullmatch(r"all|[A-Z]{2,6}", aud) else "all", "link": it["link"]}
+            table = "events"
+        res = self.req("POST", f"/{table}", row, prefer="return=representation")
+        pid = res[0]["id"] if res else None
+        self.req("PATCH", f"/feed_items?id=eq.{int(fid)}",
+                 {"status": "approved", "published_id": pid, "decided_at": datetime.now(timezone.utc).isoformat()},
+                 prefer="return=minimal")
+        return pid
+
     def expire_events(self):
         now = datetime.now(timezone.utc).isoformat()
         self.req("PATCH", f"/feed_items?kind=eq.event&status=eq.pending&starts_at=lt.{urllib.parse.quote(now)}",
@@ -445,13 +655,25 @@ def main():
     if not dry:
         url, key = os.environ.get("SUPABASE_URL", "").strip(), os.environ.get("SUPABASE_SERVICE_KEY", "").strip()
         if not url or not key:
-            sys.exit("SUPABASE_URL and SUPABASE_SERVICE_KEY must be set (GitHub → Settings → Secrets → Actions).")
+            sys.exit("STOP: the secrets SUPABASE_URL and SUPABASE_SERVICE_KEY are missing. Add both in GitHub → "
+                     "this repository → Settings → Secrets and variables → Actions → New repository secret "
+                     "(names exactly as written here).")
+        url = re.sub(r"/(rest/v1)?/*$", "", url)
+        if not re.match(r"^https://[a-z0-9-]+\.supabase\.co$", url):
+            sys.exit(f"STOP: SUPABASE_URL should look like https://xxxx.supabase.co (it is: {url[:60]}).")
         db = DB(url, key)
+        db.check()
 
     run_at = datetime.now(timezone.utc).isoformat()
     report, totals = [], {"new": 0, "seen": 0, "gone": 0, "failed": 0}
+    # Automatic posting (sources.json → "auto_publish"). Jobs from career pages and events
+    # from calendar files / embedded event data go live straight away; events read from a
+    # plain web page wait in Review feed unless their source says "auto": true.
+    auto = {"jobs": True, "events": True, **(cfg.get("auto_publish") or {})}
+    live_links = db.approved_event_links() if db else set()
+    EV = {"ics": ics_source, "html": html_source, "auto": auto_source}
     sources = [("job", c, f"{c['ats']}:{c['token']}".lower(), lambda c=c: ATS[c["ats"]](c)) for c in cfg["companies"]] + \
-              [("event", e, f"{e['type']}:{e['id']}", lambda e=e: (ics_source if e["type"] == "ics" else html_source)(e)) for e in cfg["events"]]
+              [("event", e, f"{e['type']}:{e['id']}", lambda e=e: EV[e["type"]](e)) for e in cfg["events"]]
     for kind, src, key, fetch in sources:
         if src.get("off") or (only and only.lower() not in key):
             continue
@@ -463,7 +685,7 @@ def main():
             continue
         uniq = {}
         for it in items:
-            if it.get("link", "").startswith("http") and it["title"]:
+            if it.get("link", "").startswith("http") and len(it["title"]) >= 4:
                 uniq[it["ext_id"]] = it
         items = list(uniq.values())
         if dry:
@@ -472,25 +694,52 @@ def main():
                 report.append(f"    {it['title']} — {it.get('place') or it.get('starts_at', '')} — {it['link']}")
             totals["seen"] += len(items)
             continue
-        have = db.existing(key)
-        new = [it for it in items if it["ext_id"] not in have][:MAX_NEW_PER_SOURCE]
-        keep = [it for it in items if it["ext_id"] in have]
-        rows = [{**it, "source": key, "last_seen": run_at} for it in keep + new]
-        for r in rows:
-            r.setdefault("starts_at", None)
-        db.upsert(rows)
-        # Jobs that are no longer on the company's page: take them down.
-        gone = [r for ext, r in have.items() if ext not in uniq and r["status"] in ("pending", "approved") and r["kind"] == "job"]
-        db.unpublish_jobs([r["published_id"] for r in gone if r["status"] == "approved" and r.get("published_id")])
-        db.set_status([r["id"] for r in gone], "gone")
+        try:
+            have = db.existing(key)
+            new = [it for it in items if it["ext_id"] not in have][:MAX_NEW_PER_SOURCE]
+            keep = [it for it in items if it["ext_id"] in have]
+            rows = [{**{k: v for k, v in it.items() if not k.startswith("_")}, "source": key, "last_seen": run_at} for it in keep + new]
+            for r in rows:
+                r.setdefault("starts_at", None)
+            db.upsert(rows)
+            # Jobs that are no longer on the company's page: take them down.
+            gone = [r for ext, r in have.items() if ext not in uniq and r["status"] in ("pending", "approved") and r["kind"] == "job"]
+            db.unpublish_jobs([r["published_id"] for r in gone if r["status"] == "approved" and r.get("published_id")])
+            db.set_status([r["id"] for r in gone], "gone")
+            # automatic posting
+            published = 0
+            ok = (kind == "job" and auto["jobs"]) or (kind == "event" and auto["events"])
+            if ok and not src.get("review"):
+                now_rows = db.existing(key)
+                for ext, it in uniq.items():
+                    r = now_rows.get(ext)
+                    if not r or r["status"] != "pending":
+                        continue
+                    if kind == "event" and not (it.get("_trusted") or src.get("auto")):
+                        continue
+                    if kind == "event" and it["link"] in live_links:
+                        db.set_status([r["id"]], "rejected")        # the same event from another calendar
+                        continue
+                    try:
+                        db.publish(r["id"], it)
+                        published += 1
+                        if kind == "event":
+                            live_links.add(it["link"])
+                    except Exception as e:
+                        report.append(f"✗ {src['name']}: couldn't post “{it['title'][:40]}”: {str(e)[:120]}")
+            totals["live"] = totals.get("live", 0) + published
+        except Exception as e:
+            totals["failed"] += 1
+            report.append(f"✗ {src['name']} ({key}): saving failed: {str(e)[:160]}")
+            continue
         totals["new"] += len(new); totals["seen"] += len(items); totals["gone"] += len(gone)
-        if new or gone:
-            report.append(f"• {src['name']}: {len(new)} new, {len(gone)} closed")
+        if new or gone or published:
+            report.append(f"• {src['name']}: {len(new)} new, {published} posted, {len(gone)} closed")
     if db:
         db.expire_events()
 
-    summary = (f"Mirror feed {datetime.now(BERLIN):%d.%m.%Y %H:%M} — {totals['new']} new to review, "
-               f"{totals['seen']} found, {totals['gone']} closed, {totals['failed']} sources failed")
+    summary = (f"Mirror feed {datetime.now(BERLIN):%d.%m.%Y %H:%M} — {totals.get('live', 0)} posted automatically, "
+               f"{totals['new']} new, {totals['seen']} found, {totals['gone']} closed, {totals['failed']} sources failed")
     print(summary)
     print("\n".join(report))
     if os.environ.get("GITHUB_STEP_SUMMARY"):
