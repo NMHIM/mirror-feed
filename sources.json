@@ -1,0 +1,538 @@
+{
+ "_how_to_add": "Add a company: copy one line, change name/ats/token. ats is one of greenhouse, lever, ashby, personio, smartrecruiters, recruitee, workable. token is the company's name in its job-board address (boards.greenhouse.io/TOKEN, jobs.lever.co/TOKEN, jobs.ashbyhq.com/TOKEN, TOKEN.jobs.personio.de, jobs.smartrecruiters.com/TOKEN, TOKEN.recruitee.com, apply.workable.com/TOKEN). Set \"off\": true to pause a source.",
+ "companies": [
+  {
+   "name": "N26",
+   "ats": "greenhouse",
+   "token": "n26"
+  },
+  {
+   "name": "HelloFresh",
+   "ats": "greenhouse",
+   "token": "hellofresh"
+  },
+  {
+   "name": "GetYourGuide",
+   "ats": "greenhouse",
+   "token": "getyourguide"
+  },
+  {
+   "name": "Contentful",
+   "ats": "greenhouse",
+   "token": "contentful"
+  },
+  {
+   "name": "SumUp",
+   "ats": "greenhouse",
+   "token": "sumup"
+  },
+  {
+   "name": "Trade Republic",
+   "ats": "greenhouse",
+   "token": "traderepublicbank",
+   "extra_places": [
+    "headquarter"
+   ]
+  },
+  {
+   "name": "Raisin",
+   "ats": "greenhouse",
+   "token": "raisin"
+  },
+  {
+   "name": "SoundCloud",
+   "ats": "greenhouse",
+   "token": "soundcloud71"
+  },
+  {
+   "name": "Grover",
+   "ats": "greenhouse",
+   "token": "grover",
+   "extra_places": [
+    "berlin hq"
+   ]
+  },
+  {
+   "name": "Wolt",
+   "ats": "greenhouse",
+   "token": "wolt"
+  },
+  {
+   "name": "Solaris",
+   "ats": "greenhouse",
+   "token": "solarisbank"
+  },
+  {
+   "name": "Stripe",
+   "ats": "greenhouse",
+   "token": "stripe"
+  },
+  {
+   "name": "Figma",
+   "ats": "greenhouse",
+   "token": "figma"
+  },
+  {
+   "name": "Pinterest",
+   "ats": "greenhouse",
+   "token": "pinterest"
+  },
+  {
+   "name": "Helsing",
+   "ats": "greenhouse",
+   "token": "helsing"
+  },
+  {
+   "name": "Parloa",
+   "ats": "greenhouse",
+   "token": "parloa"
+  },
+  {
+   "name": "commercetools",
+   "ats": "greenhouse",
+   "token": "commercetools"
+  },
+  {
+   "name": "Adyen",
+   "ats": "greenhouse",
+   "token": "adyen"
+  },
+  {
+   "name": "Bitpanda",
+   "ats": "greenhouse",
+   "token": "bitpanda"
+  },
+  {
+   "name": "Berlin Brands Group",
+   "ats": "greenhouse",
+   "token": "berlinbrands"
+  },
+  {
+   "name": "AKQA",
+   "ats": "greenhouse",
+   "token": "akqa"
+  },
+  {
+   "name": "Via",
+   "ats": "greenhouse",
+   "token": "via"
+  },
+  {
+   "name": "CarOnSale",
+   "ats": "greenhouse",
+   "token": "caronsale"
+  },
+  {
+   "name": "hear.com",
+   "ats": "greenhouse",
+   "token": "audibenehearcom"
+  },
+  {
+   "name": "IONOS",
+   "ats": "greenhouse",
+   "token": "ionos"
+  },
+  {
+   "name": "Capgemini Invent",
+   "ats": "greenhouse",
+   "token": "capgeminideutschlandgmbh"
+  },
+  {
+   "name": "FGS Global",
+   "ats": "greenhouse",
+   "token": "fgsglobal"
+  },
+  {
+   "name": "Spryker",
+   "ats": "greenhouse",
+   "token": "spryker"
+  },
+  {
+   "name": "Beat81",
+   "ats": "greenhouse",
+   "token": "beat81"
+  },
+  {
+   "name": "Grafana Labs",
+   "ats": "greenhouse",
+   "token": "grafanalabs"
+  },
+  {
+   "name": "GitLab",
+   "ats": "greenhouse",
+   "token": "gitlab"
+  },
+  {
+   "name": "Mozilla",
+   "ats": "greenhouse",
+   "token": "mozilla"
+  },
+  {
+   "name": "Qonto",
+   "ats": "lever",
+   "token": "qonto"
+  },
+  {
+   "name": "Xsolla",
+   "ats": "lever",
+   "token": "xsolla"
+  },
+  {
+   "name": "Packmatic",
+   "ats": "lever",
+   "token": "Packmatic"
+  },
+  {
+   "name": "Agicap",
+   "ats": "lever",
+   "token": "agicap"
+  },
+  {
+   "name": "Octopus Energy",
+   "ats": "lever",
+   "token": "octoenergy"
+  },
+  {
+   "name": "Kolibri Games",
+   "ats": "lever",
+   "token": "kolibrigames"
+  },
+  {
+   "name": "FINN",
+   "ats": "lever",
+   "token": "finn"
+  },
+  {
+   "name": "Langdock",
+   "ats": "ashby",
+   "token": "langdock"
+  },
+  {
+   "name": "Uplane",
+   "ats": "ashby",
+   "token": "uplane"
+  },
+  {
+   "name": "trawa",
+   "ats": "ashby",
+   "token": "trawa"
+  },
+  {
+   "name": "8returns",
+   "ats": "ashby",
+   "token": "8returns"
+  },
+  {
+   "name": "n8n",
+   "ats": "ashby",
+   "token": "n8n"
+  },
+  {
+   "name": "Moss",
+   "ats": "ashby",
+   "token": "moss"
+  },
+  {
+   "name": "1KOMMA5°",
+   "ats": "personio",
+   "token": "1komma5grad",
+   "domain": "de"
+  },
+  {
+   "name": "NOW GmbH",
+   "ats": "personio",
+   "token": "now-gmbh",
+   "domain": "de"
+  },
+  {
+   "name": "dpa",
+   "ats": "personio",
+   "token": "dpa",
+   "domain": "de"
+  },
+  {
+   "name": "Digital Career Institute",
+   "ats": "personio",
+   "token": "dci",
+   "domain": "de"
+  },
+  {
+   "name": "STARK",
+   "ats": "personio",
+   "token": "stark",
+   "domain": "com"
+  },
+  {
+   "name": "ANTON",
+   "ats": "personio",
+   "token": "anton",
+   "domain": "com"
+  },
+  {
+   "name": "Startup Insider",
+   "ats": "personio",
+   "token": "startup-insider",
+   "domain": "de"
+  },
+  {
+   "name": "Careloop",
+   "ats": "personio",
+   "token": "careloop",
+   "domain": "com"
+  },
+  {
+   "name": "Becker Büttner Held",
+   "ats": "personio",
+   "token": "becker-buettner-held-partgmbb-1",
+   "domain": "de"
+  },
+  {
+   "name": "Kertos",
+   "ats": "personio",
+   "token": "kertos",
+   "domain": "de"
+  },
+  {
+   "name": "LEONINE",
+   "ats": "personio",
+   "token": "leonine",
+   "domain": "de"
+  },
+  {
+   "name": "Cloover",
+   "ats": "personio",
+   "token": "cloover",
+   "domain": "com"
+  },
+  {
+   "name": "ITS Gruppe",
+   "ats": "personio",
+   "token": "its-gruppe",
+   "domain": "de"
+  },
+  {
+   "name": "Berghof Foundation",
+   "ats": "personio",
+   "token": "berghof-foundation-operations-ggmbh",
+   "domain": "de"
+  },
+  {
+   "name": "AfB",
+   "ats": "personio",
+   "token": "afb-ggmbh",
+   "domain": "de"
+  },
+  {
+   "name": "Climate Analytics",
+   "ats": "personio",
+   "token": "climate",
+   "domain": "com"
+  },
+  {
+   "name": "Ucaneo",
+   "ats": "personio",
+   "token": "ucaneo",
+   "domain": "com"
+  },
+  {
+   "name": "Agora Energiewende",
+   "ats": "personio",
+   "token": "agora-thinktanks",
+   "domain": "com"
+  },
+  {
+   "name": "Kitchen Stories",
+   "ats": "personio",
+   "token": "kitchen-stories",
+   "domain": "de"
+  },
+  {
+   "name": "deskbird",
+   "ats": "personio",
+   "token": "deskbird",
+   "domain": "com"
+  },
+  {
+   "name": "Moore TK",
+   "ats": "personio",
+   "token": "moore-tk",
+   "domain": "de"
+  },
+  {
+   "name": "Finanztip",
+   "ats": "personio",
+   "token": "finanztip",
+   "domain": "de"
+  },
+  {
+   "name": "JUIT",
+   "ats": "personio",
+   "token": "juit",
+   "domain": "com"
+  },
+  {
+   "name": "LANCH",
+   "ats": "personio",
+   "token": "lanch",
+   "domain": "de"
+  },
+  {
+   "name": "adsquare",
+   "ats": "personio",
+   "token": "adsquare",
+   "domain": "de"
+  },
+  {
+   "name": "Lyceum Technology",
+   "ats": "personio",
+   "token": "lyceum-technology",
+   "domain": "com"
+  },
+  {
+   "name": "bft",
+   "ats": "personio",
+   "token": "bft",
+   "domain": "com"
+  },
+  {
+   "name": "Tentamus",
+   "ats": "personio",
+   "token": "tentamus",
+   "domain": "com"
+  },
+  {
+   "name": "Zumera",
+   "ats": "personio",
+   "token": "zumera",
+   "domain": "com"
+  },
+  {
+   "name": "Personio",
+   "ats": "personio",
+   "token": "personio",
+   "domain": "de"
+  },
+  {
+   "name": "ib vogt",
+   "ats": "smartrecruiters",
+   "token": "ib-vogt-GmbH"
+  },
+  {
+   "name": "Scalable Capital",
+   "ats": "smartrecruiters",
+   "token": "ScalableGmbH"
+  },
+  {
+   "name": "ABOUT YOU",
+   "ats": "smartrecruiters",
+   "token": "ABOUTYOUGmbH"
+  },
+  {
+   "name": "Flink",
+   "ats": "smartrecruiters",
+   "token": "Flink3"
+  },
+  {
+   "name": "Altagram",
+   "ats": "smartrecruiters",
+   "token": "AltagramGmbH"
+  },
+  {
+   "name": "Bertelsmann",
+   "ats": "smartrecruiters",
+   "token": "Bertelsmann-Jobs"
+  },
+  {
+   "name": "AUTODOC",
+   "ats": "smartrecruiters",
+   "token": "Autodoc3"
+  },
+  {
+   "name": "RoX Health",
+   "ats": "recruitee",
+   "token": "roxhealth"
+  },
+  {
+   "name": "Ruby Berlin",
+   "ats": "recruitee",
+   "token": "rubyberlinhrconsulting"
+  },
+  {
+   "name": "BRL",
+   "ats": "recruitee",
+   "token": "brlriskconsulting"
+  },
+  {
+   "name": "Clipperton",
+   "ats": "workable",
+   "token": "clipperton"
+  },
+  {
+   "name": "Alcemy",
+   "ats": "workable",
+   "token": "alcemy"
+  }
+ ],
+ "events": [
+  {
+   "id": "fu-studium",
+   "name": "FU Studium",
+   "uni": "FU",
+   "type": "ics",
+   "url": "https://www.fu-berlin.de/en/studium/termine/index.ics?format=ics"
+  },
+  {
+   "id": "fu-calendar",
+   "name": "Freie Universität Berlin",
+   "uni": "FU",
+   "type": "ics",
+   "url": "https://www.fu-berlin.de/kalender/terminuebersicht/index.ics?format=ics"
+  },
+  {
+   "id": "fu-international",
+   "name": "FU International",
+   "uni": "FU",
+   "type": "ics",
+   "url": "https://www.fu-berlin.de/international/news-events/dates/index.ics?format=ics"
+  },
+  {
+   "id": "fu-career",
+   "name": "FU Career Service",
+   "uni": "FU",
+   "type": "ics",
+   "url": "https://www.fu-berlin.de/sites/career/qualifizierung/wege/tutoring/termine/index.ics?format=ics"
+  },
+  {
+   "id": "bht-events",
+   "name": "BHT Berlin",
+   "uni": "BHT",
+   "type": "html",
+   "url": "https://www.bht-berlin.de/events",
+   "link_pattern": "/item/cal/event/detail/"
+  },
+  {
+   "id": "hwr-events",
+   "name": "HWR Berlin",
+   "uni": "HWR",
+   "type": "html",
+   "url": "https://www.hwr-berlin.de/veranstaltungen",
+   "link_pattern": "/aktuelles/veranstaltung/detail/"
+  },
+  {
+   "id": "stw-events",
+   "name": "Studierendenwerk Berlin",
+   "uni": "all",
+   "type": "html",
+   "url": "https://www.stw.berlin/veranstaltungskalender/",
+   "link_pattern": "/veranstaltungskalender/.+\\.html"
+  },
+  {
+   "id": "stw-culture",
+   "name": "Studierendenwerk Berlin · Kultur",
+   "uni": "all",
+   "type": "html",
+   "url": "https://www.stw.berlin/kultur/eventkalender/",
+   "link_pattern": "/kalender/.+\\.html"
+  }
+ ]
+}
